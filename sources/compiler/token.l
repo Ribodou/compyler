@@ -21,8 +21,10 @@
     void yyerror(char *);
 
     #include "types.h"
+    #include "memory.h"
     #include "compiler.h"
     #include "fonctions_bien_pratiques.h"
+    #include "types.h"
 %}
 
 MAIN ^if[ ]+__name__[ ]*==[ ]*'__main__'[:]$
@@ -47,6 +49,7 @@ then        return(THEN);
 else        return(ELSE);
 while       return(WHILE);
 do          return(DO);
+def         return(DEF);
 ^[ ]+       yylval.ival = strlen(yytext); /*printf("indentation (%i) ", yylval.ival);*/ return(LEVEL);
 [ ]+        /*printf("spaaace! ");*/return(SPACE);
 return      /*printf("return "); */return(RETURN);
