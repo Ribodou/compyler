@@ -17,47 +17,57 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "table.h"
 #include "memory.h"
 
-
 int yyparse();
-/*
- * implementer une table de hachage {nom_fonction: [nom_var_0,
- *                                                  nom_var_1,
- *                                                  nom_var_2]}
- * pour ecrire de belles declaration.
- * Refaire une passe pour l'écriture.
- */
+
+
+
 
 int main(int argc, const char * argv[])
 {
-    table = NULL;
-    memoire = NULL;
-    // on se garde de la place (passer aux listes
-    // pour une implementation plus souple)
-    memoire = (int*) malloc(56*sizeof(int));
+    tab *memoire = NULL;
+    char *fonction_courante = NULL;
+    int actual_level = 0;
+    int ancient_level = 0;
+    FILE *fichier = NULL;
+
+    /* allocation de la mémoire */
+    memoire = malloc(sizeof(tab));
     if (memoire == NULL)
     {
         printf("Impossible d'allouer la mémoire. tag: fghjtf\n");
         exit(-1);
     }
+    memoire->start = NULL;
 
+    /* allocation du nom de la fonction courante */
+    fonction_courante = malloc(256 * sizeof(char));
+    if (fonction_courante == NULL)
+    {
+        printf("Impossible d'allouer le nom de la fonction courante\n");
+    }
+
+    /* ouverture du fichier de sortie */
     fichier = fopen("output/sortie.cpp", "w+");
     if (fichier == NULL)
     {
-        // On affiche un message d'erreur si on veut
-        printf("Impossible d'ouvrir le fichier de sortie\n");
+        // On affiche un message d'erreur
+        printf("Impossible d'ouvrir le fichier de sortie, BANANE!\n");
         exit(-1);
     }
-    actual_level = 0;
-    ancient_level = 0;
 
-
+    /* On inclut un include */
+    // TODO: Faire ça avec les autes include potentiels
     fprintf(fichier, "%s\n", "#include \"Var.h\"\n\n");
-    while (yyparse() != -1)
+
+    while (yyparse(&ancient_level, &actual_level, fichier, &fonction_courante, memoire) != -1)
     {
         // repeat
     }
+
+    afficher(memoire);
+
+    free_memory(&memoire);
     fclose(fichier);
 }

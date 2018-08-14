@@ -18,9 +18,10 @@
 #define __make_tree__
 
 #include "types.h"
+#include "memory.h"
 
 aexpr_t mk_aexpr_num(int n);
-aexpr_t mk_aexpr_var(char *name);
+aexpr_t mk_aexpr_var(tab *memoire, char *fonction_courante, char *name);
 aexpr_t mk_aexpr_unop(int op, aexpr_t expr);
 aexpr_t mk_aexpr_binop(int op, aexpr_t lexpr, aexpr_t rexpr);
 
@@ -30,7 +31,7 @@ bexpr_t mk_bexpr_binop(int op, bexpr_t lexpr, bexpr_t rexpr);
 bexpr_t mk_bexpr_comp(int op, aexpr_t lexpr, aexpr_t rexpr);
 
 cmd_t mk_cmd_skip(void);
-cmd_t mk_cmd_ass(char *name, aexpr_t expr);
+cmd_t mk_cmd_ass(tab *memoire, char *fonction_courante, char *name, aexpr_t expr);
 cmd_t mk_cmd_seq(cmd_t cmd1, cmd_t cmd2);
 cmd_t mk_cmd_ite(bexpr_t expr, cmd_t cmd_then, cmd_t cmd_else);
 cmd_t mk_cmd_while(bexpr_t expr, cmd_t cmd_body);

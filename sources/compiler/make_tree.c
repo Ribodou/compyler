@@ -18,9 +18,8 @@
 #include <stdlib.h>
 #include "types.h"
 #include "make_tree.h"
-#include "table.h"
 #include "fonctions_bien_pratiques.h"
-
+#include "memory.h"
 
 
 aexpr_t mk_aexpr_num(int n)
@@ -32,21 +31,29 @@ aexpr_t mk_aexpr_num(int n)
 }
 
 
-aexpr_t mk_aexpr_var(char *name)
+aexpr_t mk_aexpr_var(tab *memoire, char *fonction_courante, char *name)
 {
+    printf("yolo");
     if(name == NULL)
     {
         fprintf(stderr, "Error in mk_aexpr_var : name == NULL.\n");
         exit(-1);
     }
-    if(table_lookup_id(name) == NULL)
+    var_t var = (var_t) malloc(sizeof(struct var));
+    allouer_chaine_256(&(var->name));
+    snprintf(var->name, 256 * sizeof(char), "%s", name);
+    printf("%s%s%s\n",fonction_courante, name, est_dans_fonction(memoire, fonction_courante, name));
+    if (est_dans_fonction(memoire, fonction_courante, name) == false)
     {
-        var_t var = table_add_id(name);
+        ajout_memoire(memoire, fonction_courante, name);
         var->premiereRencontre = true;
-        /*fprintf(stderr, "Erreur in mk_aexpr_var : variable non définie - Erreur gérée.\n");*/
+    }
+    else
+    {
+        var->premiereRencontre = false;
     }
     aexpr_t arbre = (aexpr_t) malloc(sizeof(struct aexpr));
-    arbre->data.var = table_lookup_id(name);
+    arbre->data.var = var;
     arbre->tag = 6;
     return arbre;
 }
@@ -260,7 +267,7 @@ cmd_t mk_cmd_skip(void)
 }
 
 
-cmd_t mk_cmd_ass(char *name, aexpr_t expr)
+cmd_t mk_cmd_ass(tab *memoire, char *fonction_courante, char *name, aexpr_t expr)
 {
     if(name == NULL)
     {
@@ -271,13 +278,20 @@ cmd_t mk_cmd_ass(char *name, aexpr_t expr)
     arbre->tag = 1;
     arbre->data.cmd_ass.expr = expr;
 
-    if(table_lookup_id(name) == NULL)
+    var_t var = (var_t) malloc(sizeof(struct var));
+    allouer_chaine_256(&(var->name));
+    snprintf(var->name, 256 * sizeof(char), "%s", name);
+    if(est_dans_fonction(memoire, fonction_courante, name) == false)
     {
-        var_t var = table_add_id(name);
+        ajout_memoire(memoire, fonction_courante, name);
         var->premiereRencontre = true;
         /*fprintf(stderr, "Erreur in mk_aexpr_ass : variable non définie - Erreur gérée.\n");*/
     }
-    arbre->data.cmd_ass.var = table_lookup_id(name);
+    else
+    {
+        var->premiereRencontre = false;
+    }
+    arbre->data.cmd_ass.var = var;
     return arbre;
 }
 
@@ -384,7 +398,7 @@ char* see_cmd(int level, cmd_t cmd)
     switch (cmd->tag)
     {
         case 0 : //skip
-            snprintf(retour, bufSize, "%s", "");
+            snprintf(retour, bufSize, "%s%s", indentation, "// pass");
             free(indentation);
             return retour;
             break;
@@ -392,10 +406,10 @@ char* see_cmd(int level, cmd_t cmd)
             allouer_chaine_256(&chaine0);
             allouer_chaine_256(&chaine1);
 
-            // si ce n'est pas la premiere renconte, on declare la variable
+            // si c'est pas la premiere renconte, on declare la variable
             if (cmd->data.cmd_ass.var->premiereRencontre == true)
             {
-                cmd->data.cmd_ass.var->premiereRencontre == false;
+                cmd->data.cmd_ass.var->premiereRencontre = false;
                 snprintf(chaine0, bufSize, "%s%s%s%s", indentation, "Var ", cmd->data.cmd_ass.var->name, ";\n");
             }
             else

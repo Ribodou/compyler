@@ -17,15 +17,120 @@
 #ifndef __memory__
 #define __memory__
 
+#include "types.h"
 
-int *memoire;
-FILE* fichier;
-int actual_level;
-int ancient_level;
+/* La mémoire est à voir comme un dictionnaire Python: chaque clef est le nom
+ * d'une fonction et la valeur associée à cette clef est la liste des noms des 
+ * variables de cette fonction.
+ * 
+ * 
+ * Un petit schéma pour les non Pythonistes (bouh...)
+ * 
+ *       start           next            next           next
+ * tab     ->     key     ->     key     ->      key     ->     NULL
+ * 
+ *                 | head         | head          | head
+ *                 v              v               v
+ * 
+ *               value          value           value
+ * 
+ *                 | next         | next          | next
+ *                 v              v               v
+ * 
+ *               value          NULL             NULL
+ *                 | next
+ *                 v
+ *                NULL
+ */
 
 
-int mem_get_val(int loc);
+typedef struct _value
+{
+    char *var_name;
+    struct _value *next;
+} value;
 
-void mem_set_val(int loc, int val);
 
+typedef struct _key
+{
+    char *fonc_name;
+    value *head;
+    struct _key *next;
+} key;
+
+
+typedef struct _tab
+{
+    key *start;
+} tab;
+
+
+
+/*
+ * Alloue une structure value et initialise var_name au parametre name.
+ * Set next to NULL.
+ * @param name: the name of the variable
+ * @return: the value
+ */
+value *create_value(char *name);
+
+
+/*
+ * Alloue une structure key et initialise var_fonc au parametre name.
+ * Set head and next to NULL.
+ * @param name: the name of the function
+ * @return: the key
+ */
+key *create_key(char *name);
+
+
+/*
+ * Ajoute une vakeur a la clef de nom fonc_name. Si la clef n'existe pas, on la
+ * créer. Si la valeur éxiste déja, on ne fait rien.
+ * @param memoire: la mémoire (table de hachage)
+ * @param fonc_name: the name of the function
+ * @param var_name: the name of the function
+ */
+void ajout_memoire(tab *memoire, char *fonc_name, char *var_name);
+
+
+/*
+ * Retourne la liste des values (variables) de la fonction nommée fonc_name.
+ * @param memoire: la mémoire (table de hachage)
+ * @param fonc_name: the name of the function
+ * @return: a pointer to the first value
+ */
+value *get_names(tab *memoire, char *fonc_name);
+
+
+/*
+ * Libère toutes les valeurs assosciées à une clef.
+ * @param clef: la clef dont on veut supprimer toutes les valeurs.
+ */
+void free_all_values_of_a_key(key *clef);
+
+
+/*
+ * Libère la mémoire.
+ * @param memoire_ptr: un pointeur sur la mémoire (table de hachage)
+ */
+void free_memory(tab **memoire);
+
+
+/*
+ * Renvoie true si une variable de nom var_name est dans la fonction fonc_name.
+ * Renvoie false sinon.
+ * @param memoire: la mémoire (table de hachage)
+ * @param fonc_name: le nom de la fonction dans laquelle chercher.
+ * @param var_name: le nom de la variable a chercher.
+ * @return: un boolen
+ */
+boolean est_dans_fonction(tab *memoire, char *fonc_name, char *var_name);
+
+
+/*
+ * Affiche le nom de toute les variable de toutes les fonctions.
+ * @param memoire: la mémoire (table de hachage)
+ */
+void afficher(tab *memoire);
 #endif
